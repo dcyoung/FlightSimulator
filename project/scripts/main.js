@@ -302,28 +302,28 @@ function draw() {
     mat4.rotateZ(mvMatrix, mvMatrix, degToRad(horizontalViewingAngle));     
     setMatrixUniforms();
     
-    if ((document.getElementById("polygon").checked) || (document.getElementById("wirepoly").checked))
-    {
-      uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[1.0,0.5,0.0],[0.0,0.0,0.0]);
-      drawTerrain();
+    if (document.getElementById("polygon").checked){
+        uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[1.0,0.5,0.0],[0.0,0.0,0.0]);
+        drawTerrain();
     }
-    
     if(document.getElementById("wirepoly").checked){
-      uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]);
-      drawTerrainEdges();
+        uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[1.0,0.5,0.0],[0.0,0.0,0.0]);
+        drawTerrain();
+        uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]);
+        drawTerrainEdges();
     }
-
     if(document.getElementById("wireframe").checked){
-      uploadLightsToShader([0,1,1],[1.0,1.0,1.0],[0.0,0.0,0.0],[0.0,0.0,0.0]);
-      drawTerrainEdges();
+        uploadLightsToShader([0,1,1],[1.0,1.0,1.0],[0.0,0.0,0.0],[0.0,0.0,0.0]);
+        drawTerrainEdges();
     }
-    
     if(document.getElementById("pointlight").checked){
         /*Cool retro 80s tron like shader
         var lightPosition = vec3.fromValues (0.0, 10.0, 0.0);
         var lightAmbient = vec3.fromValues (1.0, 0.0, 0.0 );
         var lightDiffuse = vec3.fromValues ( 1.0, 0.0, 1.0 );
         var lightSpecular = vec3.fromValues ( 1.0, 2.0, 3.0 );
+        uploadLightsToShader(lightPosition,lightAmbient,lightDiffuse,lightSpecular);
+        drawTerrainEdges();
         */
         
         var lightPosition = vec3.fromValues (0.0, 1.0, 1.5);
@@ -336,24 +336,61 @@ function draw() {
         uploadLightsToShader(lightPosition,lightAmbient,lightDiffuse,lightSpecular);
         drawTerrainEdges();
     }
+    
     mvPopMatrix();
-  
 }
 
 //----------------------------------------------------------------------------------
 function animate() {
    
 }
- 
+
+function moveCameraPoint(newPt){
+    eyePt = vec3.add(eyePt,eyePt, newPt);
+}
+
+function addControls(){
+    var movementInterval = 0.1;
+    document.body.addEventListener('keypress', function (e) {
+        var key = e.which || e.keyCode;
+        var value = String.fromCharCode(e.keyCode);
+        switch(value) {
+            case "w":
+                moveCameraPoint([0.0, 0.0, -movementInterval]);
+                break;
+            case "a":
+                moveCameraPoint([-movementInterval, 0.0, 0.0]);
+                break;
+            case "s":
+                moveCameraPoint([0.0, 0.0, movementInterval]);
+                break;
+            case "d":
+                moveCameraPoint([movementInterval, 0.0, 0.0]);
+                break;
+            case "e":
+                moveCameraPoint([0.0, movementInterval, 0.0]);
+                break;
+            case "q":
+                moveCameraPoint([0.0, -movementInterval, 0.0]);
+                break;
+            default:
+                break;
+        }
+        
+    });
+}
 //----------------------------------------------------------------------------------
-function startup() {
-  canvas = document.getElementById("myGLCanvas");
-  gl = createGLContext(canvas);
-  setupShaders();
-  setupBuffers();
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.enable(gl.DEPTH_TEST);
-  tick();
+function startup() {    
+    canvas = document.getElementById("myGLCanvas");
+    gl = createGLContext(canvas);
+    setupShaders();
+    setupBuffers();
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.enable(gl.DEPTH_TEST);
+    
+    addControls();
+    
+    tick();
 }
 
 //----------------------------------------------------------------------------------
