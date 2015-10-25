@@ -12,7 +12,6 @@
 
     <script src="scripts/main.js"></script> 
     
-    
     <meta charset="utf-8"> 
 </head>
 
@@ -34,6 +33,25 @@
             <br><span id="horizontalAngleValBox"></span>
             <input type="range" min="-90" max="90" step="1" oninput="updateHorizontalAngle(this.value)" onchange="updateHorizontalAngle(this.value)" value = 25>
             Horizontal Angle: <input type="text" id="horizontalAngleValueDisplay" value="">
+            
+            
+            
+             <br><span id="rollSpan"></span>
+            <input id = "roll" type="range" min="-0.5" max="0.5" step="0.05" oninput="updateCameraOrientation()" onchange="updateCameraOrientation()" value = 0>
+            Roll Angle (rads): <input type="text" id="rollValueDisplay" value="">
+            
+            <br><span id="pitchSpan"></span>
+            <input id = "pitch" type="range" min="-0.5" max="0.5" step="0.05" oninput="updateCameraOrientation()" onchange="updateCameraOrientation()" value = 0>
+            Pitch Angle (rads): <input type="text" id="pitchValueDisplay" value="">
+            
+            <br><span id="yawSpan"></span>
+            <input id = "yaw" type="range" min="-0.5" max="0.5" step="0.05" oninput="updateCameraOrientation()" onchange="updateCameraOrientation()" value = 0>
+            Yaw Angle (rads): <input type="text" id="yawValueDisplay" value="">
+            
+             <br><span id="throttleSpan"></span>
+            <input id = "throttle" type="range" min="0" max="1" step="0.01" oninput="updateThrottle(this.value)" onchange="updateThrottle(this.value)" value = 0>
+            Normalized Throttle: <input type="text" id="throttleValueDisplay" value="">
+            
         </fieldset>
         </form>
 </body>

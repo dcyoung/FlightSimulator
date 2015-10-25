@@ -4,6 +4,7 @@ var canvas;
 var shaderProgram;
 var vertexPositionBuffer;
 
+
 // Create a place to store terrain geometry
 var tVertexPositionBuffer;
 
@@ -19,7 +20,9 @@ var tIndexEdgeBuffer;
 // View parameters
 var eyePt = vec3.fromValues(0.0,0.0,0.0);
 var viewDir = vec3.fromValues(0.0,0.0,-1.0);
+var viewDirStart = vec3.fromValues(0.0,0.0,-1.0);
 var up = vec3.fromValues(0.0,1.0,0.0);
+var upStart = vec3.fromValues(0.0,1.0,0.0);
 var viewPt = vec3.fromValues(0.0,0.0,0.0);
 
 // Create the normal
@@ -35,6 +38,11 @@ var mvMatrixStack = [];
 
 var horizontalViewingAngle = 25;
 var verticleViewingAngle = -75;
+
+var throttle = 0;
+var minSpeed = 0.001;
+var maxSpeed = 0.01;
+var displacementVector =  vec3.create();
 
 //-------------------------------------------------------------------------
 function setupTerrainBuffers() {
@@ -270,14 +278,23 @@ function setupBuffers() {
     setupTerrainBuffers();
 }
 
+//----------------------------------------------------------------------------------
 function updateHorizontalAngle(angle){
     horizontalViewingAngle = angle;
     document.getElementById('horizontalAngleValueDisplay').value = angle; 
 }
+
+//----------------------------------------------------------------------------------
 function updateVerticleAngle(angle){
     verticleViewingAngle = angle;
     document.getElementById('verticleAngleValueDisplay').value = angle; 
 }
+
+function updateThrottle(throttleInput){
+	throttle = throttleInput;
+	document.getElementById('throttleValueDisplay').value = throttle;
+}
+
 
 //----------------------------------------------------------------------------------
 function draw() { 
@@ -345,10 +362,28 @@ function animate() {
    
 }
 
+
+//quaternion from axis-angle
+function normalizedQuatFromAngles(rollAngle,pitchAngle, yawAngle){
+	var q = quat.fromValues(0,0,0,1);
+	quat.rotateZ(q,q,rollAngle);
+	quat.rotateX(q,q,pitchAngle);
+	quat.rotateY(q,q,-yawAngle);
+	quat.normalize(q,q);
+	return q;
+}
+
+
+//----------------------------------------------------------------------------------
 function moveCameraPoint(newPt){
     eyePt = vec3.add(eyePt,eyePt, newPt);
 }
 
+//----------------------------------------------------------------------------------
+//actually, the camera poisiton should always move forward to (eyePt + movementInterval*viewDir)
+//where movementInterval is set by speed of the plane and maybe a throttle
+//then, the a (left) key should map to roll left with a bit of pitch back 
+//then, the d (right) key should map to roll right with a bit of pitch back
 function addControls(){
     var movementInterval = 0.1;
     document.body.addEventListener('keypress', function (e) {
@@ -379,6 +414,48 @@ function addControls(){
         
     });
 }
+
+function updatePlane(){
+	var movementInterval = minSpeed + throttle*(maxSpeed-minSpeed);
+	vec3.normalize(displacementVector, viewDir);
+	vec3.scale(displacementVector, displacementVector, movementInterval);
+	vec3.add(eyePt, eyePt, displacementVector);
+}
+
+
+
+function updateCameraOrientation(){
+	var roll =  document.getElementById('roll').value; 
+	 document.getElementById('rollValueDisplay').value = roll;
+	
+    var pitch =  document.getElementById('pitch').value;
+    document.getElementById('pitchValueDisplay').value = pitch;
+    
+    var yaw =  document.getElementById('yaw').value;
+    document.getElementById('yawValueDisplay').value = yaw;
+    
+    
+    var q = normalizedQuatFromAngles(roll, pitch , yaw);
+    
+
+    if(pitch != 0 || ( roll != 0 && yaw != 0 ) ){ 
+    	//update viewDir and up vector
+    	vec3.transformQuat(viewDir, viewDirStart,q);
+    	vec3.transformQuat(up, upStart, q);
+    	vec3.normalize(up, up);
+    	vec3.normalize(viewDir, viewDir);
+    }
+    else if(roll != 0){
+    	//just update the up vector
+    	vec3.transformQuat(up, upStart,q);
+    	vec3.normalize(up, up);
+    }
+    else if( yaw != 0){ 
+    	//just update the viewDir vector
+    	vec3.transformQuat(viewDir, viewDirStart,q);
+    	vec3.normalize(viewDir, viewDir);
+    }
+}
 //----------------------------------------------------------------------------------
 function startup() {    
     canvas = document.getElementById("myGLCanvas");
@@ -388,13 +465,19 @@ function startup() {
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.enable(gl.DEPTH_TEST);
     
+    updateCameraOrientation();
+    
+    //Setup the controls/inputs so the user can move the camera
     addControls();
+    
+    
     
     tick();
 }
 
 //----------------------------------------------------------------------------------
 function tick() {
+	updatePlane();
     requestAnimFrame(tick);
     draw();
     animate();
