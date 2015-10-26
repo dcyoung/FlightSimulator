@@ -2,17 +2,7 @@
 <html lang="en"> 
 <head>
 <title> Flight Simulator </title>
-    
-    <!--- Load Scripts --->
-    <script src="scripts/lib/gl-matrix-min.js"></script> 
-    <script src="scripts/lib/webgl-utils.js"></script>
-    <script src="scripts/app/simpleModeling.js"></script>   
-    <script src="scripts/app/terrainModeling.js"></script>  
-     <script src="scripts/app/diamondSquare.js"></script>  
-
-    <script src="scripts/main.js"></script> 
-    
-    <meta charset="utf-8"> 
+	<meta charset="utf-8"> 
 </head>
 
 <body onload="startup();">
@@ -57,7 +47,19 @@
 </body>
 
     
-    
+<!------------------------------------------------ Load Scripts ------------------------------------------------>
+
+<!-- 3rd Party Libraries -->
+<script src="scripts/lib/gl-matrix-min.js"></script> 
+<script src="scripts/lib/webgl-utils.js"></script>
+
+<!-- Helper Scripts -->
+<script src="scripts/app/simpleModeling.js"></script>   
+<script src="scripts/app/terrainModeling.js"></script>  
+ <script src="scripts/app/diamondSquare.js"></script>
+   
+<!-- Main Script -->
+<script src="scripts/main.js"></script> 
 
 <!------------------------------------------------ Define Vertex Shaders ------------------------------------------------>  
     

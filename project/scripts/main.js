@@ -1,6 +1,6 @@
 
 var gl;
-var canvas;
+var canvas = document.getElementById("myGLCanvas");
 var shaderProgram;
 var vertexPositionBuffer;
 
@@ -43,6 +43,30 @@ var throttle = 0;
 var minSpeed = 0.001;
 var maxSpeed = 0.01;
 var displacementVector =  vec3.create();
+
+
+//pointer lock object forking for cross browser
+canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
+document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+canvas.onclick = function() {canvas.requestPointerLock();}
+
+//Hook pointer lock state change events for different browsers
+document.addEventListener('pointerlockchange', lockChangeAlert, false);
+document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+function lockChangeAlert() {
+  if(document.pointerLockElement === canvas || document.mozPointerLockElement === canvas) {
+	  console.log('The pointer lock status is now locked');
+	  document.addEventListener("mousemove", mouseLoop, false);
+  } else {
+	  console.log('The pointer lock status is now unlocked');  
+	  document.removeEventListener("mousemove", mouseLoop, false);
+  }
+}
+function mouseLoop(e) {
+	var movementX = e.movementX || e.mozMovementX || 0;
+	var movementY = e.movementY || e.mozMovementY || 0;
+	console.log("X movement: " + movementX + ', Y movement: ' + movementY);
+}
 
 //-------------------------------------------------------------------------
 function setupTerrainBuffers() {
@@ -415,6 +439,7 @@ function addControls(){
     });
 }
 
+//Simply moves the plane forward along its view direction vector by a distance proportional to its speed
 function updatePlane(){
 	var movementInterval = minSpeed + throttle*(maxSpeed-minSpeed);
 	vec3.normalize(displacementVector, viewDir);
@@ -456,10 +481,21 @@ function updateCameraOrientation(){
     	vec3.normalize(viewDir, viewDir);
     }
 }
+
+
 //----------------------------------------------------------------------------------
 function startup() {    
-    canvas = document.getElementById("myGLCanvas");
-    gl = createGLContext(canvas);
+
+	var havePointerLock = 'pointerLockElement' in document ||
+	    'mozPointerLockElement' in document ||
+	    'webkitPointerLockElement' in document;
+	if(!havePointerLock){
+		alert("The browser you are using does not support PointerLock, a necessary API for mouse control used on this page. Please try using Chrome.");
+		return;
+	}
+	
+	
+	gl = createGLContext(canvas);
     setupShaders();
     setupBuffers();
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
