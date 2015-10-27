@@ -1,46 +1,4 @@
-float points[] = {
-  -10.0f,  10.0f, -10.0f,
-  -10.0f, -10.0f, -10.0f,
-   10.0f, -10.0f, -10.0f,
-   10.0f, -10.0f, -10.0f,
-   10.0f,  10.0f, -10.0f,
-  -10.0f,  10.0f, -10.0f,
-  
-  -10.0f, -10.0f,  10.0f,
-  -10.0f, -10.0f, -10.0f,
-  -10.0f,  10.0f, -10.0f,
-  -10.0f,  10.0f, -10.0f,
-  -10.0f,  10.0f,  10.0f,
-  -10.0f, -10.0f,  10.0f,
-  
-   10.0f, -10.0f, -10.0f,
-   10.0f, -10.0f,  10.0f,
-   10.0f,  10.0f,  10.0f,
-   10.0f,  10.0f,  10.0f,
-   10.0f,  10.0f, -10.0f,
-   10.0f, -10.0f, -10.0f,
-   
-  -10.0f, -10.0f,  10.0f,
-  -10.0f,  10.0f,  10.0f,
-   10.0f,  10.0f,  10.0f,
-   10.0f,  10.0f,  10.0f,
-   10.0f, -10.0f,  10.0f,
-  -10.0f, -10.0f,  10.0f,
-  
-  -10.0f,  10.0f, -10.0f,
-   10.0f,  10.0f, -10.0f,
-   10.0f,  10.0f,  10.0f,
-   10.0f,  10.0f,  10.0f,
-  -10.0f,  10.0f,  10.0f,
-  -10.0f,  10.0f, -10.0f,
-  
-  -10.0f, -10.0f, -10.0f,
-  -10.0f, -10.0f,  10.0f,
-   10.0f, -10.0f, -10.0f,
-   10.0f, -10.0f, -10.0f,
-  -10.0f, -10.0f,  10.0f,
-   10.0f, -10.0f,  10.0f
-};
+
 
 
 
@@ -51,6 +9,7 @@ var canvas = document.getElementById("myGLCanvas");
 var context2d;
 var overlaidCanvas = document.getElementById("overlaidCanvas");
 var cockpitImg;
+
 
 var shaderProgram;
 var vertexPositionBuffer;
@@ -97,8 +56,8 @@ var displacementVector =  vec3.create();
 
 //---------------------------- Terrain Parameter Stuff ---------------------------------------------
 //this will grow exponentially so be careful
-var terrainComplexity = 7;
-var terrainScale = 5;
+var terrainComplexity = 7;//7;
+var terrainScale = 5;//5;
 
 
 //---------------------------- MOUSE CONTROL STUFF ---------------------------------------------
@@ -567,12 +526,11 @@ function updateRotationFromMouseIfNecessary(){
 
 //----------------------------------------------------------------------------------
 function startup() {    
-
 	var havePointerLock = 'pointerLockElement' in document ||
 	    'mozPointerLockElement' in document ||
 	    'webkitPointerLockElement' in document;
 	if(!havePointerLock){
-		alert("The browser you are using does not support PointerLock, a necessary API for mouse control used on this page. Please try using Chrome.");
+		alert("The browser you are using does not support PointerLock, a necessary API for mouse control. Please try using Chrome.");
 		return;
 	}
 	
