@@ -1,6 +1,57 @@
+float points[] = {
+  -10.0f,  10.0f, -10.0f,
+  -10.0f, -10.0f, -10.0f,
+   10.0f, -10.0f, -10.0f,
+   10.0f, -10.0f, -10.0f,
+   10.0f,  10.0f, -10.0f,
+  -10.0f,  10.0f, -10.0f,
+  
+  -10.0f, -10.0f,  10.0f,
+  -10.0f, -10.0f, -10.0f,
+  -10.0f,  10.0f, -10.0f,
+  -10.0f,  10.0f, -10.0f,
+  -10.0f,  10.0f,  10.0f,
+  -10.0f, -10.0f,  10.0f,
+  
+   10.0f, -10.0f, -10.0f,
+   10.0f, -10.0f,  10.0f,
+   10.0f,  10.0f,  10.0f,
+   10.0f,  10.0f,  10.0f,
+   10.0f,  10.0f, -10.0f,
+   10.0f, -10.0f, -10.0f,
+   
+  -10.0f, -10.0f,  10.0f,
+  -10.0f,  10.0f,  10.0f,
+   10.0f,  10.0f,  10.0f,
+   10.0f,  10.0f,  10.0f,
+   10.0f, -10.0f,  10.0f,
+  -10.0f, -10.0f,  10.0f,
+  
+  -10.0f,  10.0f, -10.0f,
+   10.0f,  10.0f, -10.0f,
+   10.0f,  10.0f,  10.0f,
+   10.0f,  10.0f,  10.0f,
+  -10.0f,  10.0f,  10.0f,
+  -10.0f,  10.0f, -10.0f,
+  
+  -10.0f, -10.0f, -10.0f,
+  -10.0f, -10.0f,  10.0f,
+   10.0f, -10.0f, -10.0f,
+   10.0f, -10.0f, -10.0f,
+  -10.0f, -10.0f,  10.0f,
+   10.0f, -10.0f,  10.0f
+};
+
+
+
 
 var gl;
 var canvas = document.getElementById("myGLCanvas");
+
+var context2d;
+var overlaidCanvas = document.getElementById("overlaidCanvas");
+var cockpitImg;
+
 var shaderProgram;
 var vertexPositionBuffer;
 
@@ -18,7 +69,8 @@ var tIndexTriBuffer;
 var tIndexEdgeBuffer;
 
 // View parameters
-var eyePt = vec3.fromValues(0.0,0.0,0.0);
+var quatComposite = quat.create();
+var eyePt = vec3.fromValues(5.0, 1.0, 5.0);
 var viewDir = vec3.fromValues(0.0,0.0,-1.0);
 var viewDirStart = vec3.fromValues(0.0,0.0,-1.0);
 var up = vec3.fromValues(0.0,1.0,0.0);
@@ -36,37 +88,60 @@ var pMatrix = mat4.create();
 
 var mvMatrixStack = [];
 
-var horizontalViewingAngle = 25;
-var verticleViewingAngle = -75;
-
 var throttle = 0;
 var minSpeed = 0.001;
 var maxSpeed = 0.01;
 var displacementVector =  vec3.create();
 
 
-//pointer lock object forking for cross browser
-canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock;
-document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-canvas.onclick = function() {canvas.requestPointerLock();}
 
-//Hook pointer lock state change events for different browsers
+//---------------------------- Terrain Parameter Stuff ---------------------------------------------
+//this will grow exponentially so be careful
+var terrainComplexity = 7;
+var terrainScale = 5;
+
+
+//---------------------------- MOUSE CONTROL STUFF ---------------------------------------------
+var mouseInputReady = false;
+
+//pointer lock object forking for cross browser
+overlaidCanvas.requestPointerLock = overlaidCanvas.requestPointerLock || overlaidCanvas.mozRequestPointerLock;
+document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+//Ask the browser to lock the pointer
+overlaidCanvas.onclick = function() {overlaidCanvas.requestPointerLock();}
+
+//fires whenever a change in pointer lock state occurs
 document.addEventListener('pointerlockchange', lockChangeAlert, false);
+//fires whenever the mouse has moved
 document.addEventListener('mozpointerlockchange', lockChangeAlert, false);
+
+//Setup the response to mouse events
 function lockChangeAlert() {
-  if(document.pointerLockElement === canvas || document.mozPointerLockElement === canvas) {
+  if(document.pointerLockElement === overlaidCanvas || document.mozPointerLockElement === overlaidCanvas) {
 	  console.log('The pointer lock status is now locked');
-	  document.addEventListener("mousemove", mouseLoop, false);
+	  setTimeout(function(){mouseInputReady = true;}, 3000);
+	  document.addEventListener("mousemove", mouseCallback, false);
   } else {
 	  console.log('The pointer lock status is now unlocked');  
-	  document.removeEventListener("mousemove", mouseLoop, false);
+	  mouseInputReady = false;
+	  document.removeEventListener("mousemove", mouseCallback, false);
   }
 }
-function mouseLoop(e) {
-	var movementX = e.movementX || e.mozMovementX || 0;
-	var movementY = e.movementY || e.mozMovementY || 0;
-	console.log("X movement: " + movementX + ', Y movement: ' + movementY);
+var mouseMovementX = 0;
+var mouseMovementY = 0;
+
+//respond to mouse movement by updating the movement of the mouse
+function mouseCallback(e) {
+	if(mouseInputReady){
+		mouseMovementX = e.movementX || e.mozMovementX || 0;
+		mouseMovementY = e.movementY || e.mozMovementY || 0;
+	}
 }
+
+
+
+
+
 
 //-------------------------------------------------------------------------
 function setupTerrainBuffers() {
@@ -75,8 +150,8 @@ function setupTerrainBuffers() {
     var fTerrain=[];
     var nTerrain=[];
     var eTerrain=[];
-    var gridN=Math.pow(2,5); //has to be a power of 2 for the diamond square algorithm to wor
-    var gridMaxCoordinate = 1;
+    var gridN=Math.pow(2, terrainComplexity); //has to be a power of 2 for the diamond square algorithm to wor
+    var gridMaxCoordinate = terrainScale;
     
     var numT = terrainFromIteration(gridN, -gridMaxCoordinate,gridMaxCoordinate,-gridMaxCoordinate,gridMaxCoordinate, vTerrain, fTerrain, nTerrain);
     console.log("Generated ", numT, " triangles"); 
@@ -303,16 +378,6 @@ function setupBuffers() {
 }
 
 //----------------------------------------------------------------------------------
-function updateHorizontalAngle(angle){
-    horizontalViewingAngle = angle;
-    document.getElementById('horizontalAngleValueDisplay').value = angle; 
-}
-
-//----------------------------------------------------------------------------------
-function updateVerticleAngle(angle){
-    verticleViewingAngle = angle;
-    document.getElementById('verticleAngleValueDisplay').value = angle; 
-}
 
 function updateThrottle(throttleInput){
 	throttle = throttleInput;
@@ -339,8 +404,8 @@ function draw() {
     mvPushMatrix();
     vec3.set(transformVec,0.0,-0.25,-3.0);
     mat4.translate(mvMatrix, mvMatrix,transformVec);
-    mat4.rotateX(mvMatrix, mvMatrix, degToRad(verticleViewingAngle));
-    mat4.rotateZ(mvMatrix, mvMatrix, degToRad(horizontalViewingAngle));     
+    mat4.rotateX(mvMatrix, mvMatrix, degToRad(-55));
+    mat4.rotateZ(mvMatrix, mvMatrix, degToRad(-160));     
     setMatrixUniforms();
     
     if (document.getElementById("polygon").checked){
@@ -348,7 +413,8 @@ function draw() {
         drawTerrain();
     }
     if(document.getElementById("wirepoly").checked){
-        uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[1.0,0.5,0.0],[0.0,0.0,0.0]);
+        //uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[1.0,0.5,0.0],[0.0,0.0,0.0]);
+    	uploadLightsToShader([0,1,1],[0.1,0.1,0.1],[1.0,0.5,0.0],[0.0,0.0,0.0]);
         drawTerrain();
         uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]);
         drawTerrainEdges();
@@ -387,15 +453,6 @@ function animate() {
 }
 
 
-//quaternion from axis-angle
-function normalizedQuatFromAngles(rollAngle,pitchAngle, yawAngle){
-	var q = quat.fromValues(0,0,0,1);
-	quat.rotateZ(q,q,rollAngle);
-	quat.rotateX(q,q,pitchAngle);
-	quat.rotateY(q,q,-yawAngle);
-	quat.normalize(q,q);
-	return q;
-}
 
 
 //----------------------------------------------------------------------------------
@@ -404,39 +461,51 @@ function moveCameraPoint(newPt){
 }
 
 //----------------------------------------------------------------------------------
-//actually, the camera poisiton should always move forward to (eyePt + movementInterval*viewDir)
-//where movementInterval is set by speed of the plane and maybe a throttle
-//then, the a (left) key should map to roll left with a bit of pitch back 
-//then, the d (right) key should map to roll right with a bit of pitch back
-function addControls(){
-    var movementInterval = 0.1;
+var throttleSensitivity = 0.005;
+//use the mouse for pitch and yaw, and change the throttle with w and s
+
+var map = []; // Or you could call it "key"
+onkeydown = onkeyup = function(e){
+    e = e || event; // to deal with IE
+    map[e.keyCode] = e.type == 'keydown';
+    //only use
+    if(!mouseInputReady){
+	    //if w is pressed
+	    if(map[87]){
+	    	quat.multiply(quatComposite, quatComposite, quat.fromValues(-pitchMovementSensitivity, 0, 0, 1));  
+	    }
+	    //is s is pressed
+	    if(map[83]){
+	    	quat.multiply(quatComposite, quatComposite, quat.fromValues(pitchMovementSensitivity, 0, 0, 1));
+	    }
+	    //if a is pressed 
+	    if(map[65]){
+	    	quat.multiply(quatComposite, quatComposite, quat.fromValues(0, 0, rollMovementSensitivity, 1)); 
+	    }
+	    //if d is pressed
+	    if(map[68]){
+	    	quat.multiply(quatComposite, quatComposite, quat.fromValues(0, 0, -rollMovementSensitivity, 1));
+	    }
+    }
+}
+
+function addThrottleControls(){
     document.body.addEventListener('keypress', function (e) {
         var key = e.which || e.keyCode;
         var value = String.fromCharCode(e.keyCode);
         switch(value) {
-            case "w":
-                moveCameraPoint([0.0, 0.0, -movementInterval]);
-                break;
-            case "a":
-                moveCameraPoint([-movementInterval, 0.0, 0.0]);
-                break;
-            case "s":
-                moveCameraPoint([0.0, 0.0, movementInterval]);
-                break;
-            case "d":
-                moveCameraPoint([movementInterval, 0.0, 0.0]);
-                break;
             case "e":
-                moveCameraPoint([0.0, movementInterval, 0.0]);
+                throttle = Math.min(1, throttle + throttleSensitivity);
                 break;
             case "q":
-                moveCameraPoint([0.0, -movementInterval, 0.0]);
+            	throttle = Math.max(0, throttle - throttleSensitivity);
                 break;
             default:
                 break;
         }
         
     });
+	
 }
 
 //Simply moves the plane forward along its view direction vector by a distance proportional to its speed
@@ -447,41 +516,54 @@ function updatePlane(){
 	vec3.add(eyePt, eyePt, displacementVector);
 }
 
-
-
-function updateCameraOrientation(){
-	var roll =  document.getElementById('roll').value; 
-	 document.getElementById('rollValueDisplay').value = roll;
-	
-    var pitch =  document.getElementById('pitch').value;
-    document.getElementById('pitchValueDisplay').value = pitch;
-    
-    var yaw =  document.getElementById('yaw').value;
-    document.getElementById('yawValueDisplay').value = yaw;
-    
-    
-    var q = normalizedQuatFromAngles(roll, pitch , yaw);
-    
-
-    if(pitch != 0 || ( roll != 0 && yaw != 0 ) ){ 
-    	//update viewDir and up vector
-    	vec3.transformQuat(viewDir, viewDirStart,q);
-    	vec3.transformQuat(up, upStart, q);
-    	vec3.normalize(up, up);
-    	vec3.normalize(viewDir, viewDir);
-    }
-    else if(roll != 0){
-    	//just update the up vector
-    	vec3.transformQuat(up, upStart,q);
-    	vec3.normalize(up, up);
-    }
-    else if( yaw != 0){ 
-    	//just update the viewDir vector
-    	vec3.transformQuat(viewDir, viewDirStart,q);
-    	vec3.normalize(viewDir, viewDir);
-    }
+//Keeps an angle within the [-2Pi:2Pi] range
+function maintainAngleRange(rotation){
+	if(rotation >= 2*Math.PI){
+		rotation = rotation - 2*Math.PI;
+	}
+	else if(rotation < -2*Math.PI){
+		rotation = rotation + 2*Math.PI;
+	}
+	return rotation;
 }
 
+var roll = 0;
+var pitch = 0;
+var yaw = 0;
+var pitchMovementSensitivity = 0.003;
+var rollMovementSensitivity = 0.005;
+var yawMovementSensitivity = 0.005;
+
+function updateCameraOrientation(){
+	updateRotationFromMouseIfNecessary();
+	
+	//update viewDir and up vector
+	quat.normalize(quatComposite, quatComposite);
+	vec3.transformQuat(viewDir, viewDirStart,quatComposite);
+	vec3.transformQuat(up, upStart, quatComposite);
+	vec3.normalize(up, up);
+	vec3.normalize(viewDir, viewDir);
+}
+
+/**
+ * updates the quaternion composite for rotation based off the mouse input
+ */
+function updateRotationFromMouseIfNecessary(){
+	var rollInput = -mouseMovementX*rollMovementSensitivity;
+	var pitchInput = mouseMovementY*pitchMovementSensitivity;
+	if(rollInput > 0){
+		quat.multiply(quatComposite, quatComposite, quat.fromValues(0, 0, rollInput, 1)); 
+	}
+	else if(rollInput < 0 ){
+		quat.multiply(quatComposite, quatComposite, quat.fromValues(0, 0, rollInput, 1));
+	}
+	if(pitchInput > 0 ){
+		quat.multiply(quatComposite, quatComposite, quat.fromValues(pitchInput, 0, 0, 1));
+	}
+	else if(pitchInput < 0 ){
+		quat.multiply(quatComposite, quatComposite, quat.fromValues(pitchInput, 0, 0, 1));
+	}
+}
 
 //----------------------------------------------------------------------------------
 function startup() {    
@@ -495,6 +577,9 @@ function startup() {
 	}
 	
 	
+	context2d = overlaidCanvas.getContext("2d");
+	cockpitImg = document.getElementById("cockpitImg");
+	
 	gl = createGLContext(canvas);
     setupShaders();
     setupBuffers();
@@ -504,18 +589,20 @@ function startup() {
     updateCameraOrientation();
     
     //Setup the controls/inputs so the user can move the camera
-    addControls();
-    
-    
+    addThrottleControls();
     
     tick();
 }
 
 //----------------------------------------------------------------------------------
 function tick() {
+	updateCameraOrientation();
 	updatePlane();
     requestAnimFrame(tick);
     draw();
+    
+    context2d.drawImage(cockpitImg, 0, 0);
+    
     animate();
 }
 

@@ -6,44 +6,54 @@
 </head>
 
 <body onload="startup();">
- <canvas id="myGLCanvas" width="800" height="800"></canvas>
-    <form id="input_form">
-        <fieldset>
-            <legend>Rendering Parameters</legend>
-         <input type="radio" name="primitive" id="wireframe" value="wireframe"> Wireframe
-         <input type="radio" name="primitive" id="polygon" id="polygon" value="polygon"> Polygon
-         <input type="radio" name="primitive" id="pointlight" value="pointlight" checked > Point Light  
-            <input type="radio" name="primitive" id="wirepoly" value="wirepoly" checked > Polygon with Edges  
-         
-            
-            <br><span id="verticleAngleValBox"></span>
-            <input type="range" min="-90" max="90" step="1" oninput="updateVerticleAngle(this.value)" onchange="updateVerticleAngle(this.value)" value = -75>
-            Verticle Angle: <input type="text" id="verticleAngleValueDisplay" value="">
-            
-            <br><span id="horizontalAngleValBox"></span>
-            <input type="range" min="-90" max="90" step="1" oninput="updateHorizontalAngle(this.value)" onchange="updateHorizontalAngle(this.value)" value = 25>
-            Horizontal Angle: <input type="text" id="horizontalAngleValueDisplay" value="">
-            
-            
-            
-             <br><span id="rollSpan"></span>
-            <input id = "roll" type="range" min="-0.5" max="0.5" step="0.05" oninput="updateCameraOrientation()" onchange="updateCameraOrientation()" value = 0>
-            Roll Angle (rads): <input type="text" id="rollValueDisplay" value="">
-            
-            <br><span id="pitchSpan"></span>
-            <input id = "pitch" type="range" min="-0.5" max="0.5" step="0.05" oninput="updateCameraOrientation()" onchange="updateCameraOrientation()" value = 0>
-            Pitch Angle (rads): <input type="text" id="pitchValueDisplay" value="">
-            
-            <br><span id="yawSpan"></span>
-            <input id = "yaw" type="range" min="-0.5" max="0.5" step="0.05" oninput="updateCameraOrientation()" onchange="updateCameraOrientation()" value = 0>
-            Yaw Angle (rads): <input type="text" id="yawValueDisplay" value="">
-            
-             <br><span id="throttleSpan"></span>
-            <input id = "throttle" type="range" min="0" max="1" step="0.01" oninput="updateThrottle(this.value)" onchange="updateThrottle(this.value)" value = 0>
-            Normalized Throttle: <input type="text" id="throttleValueDisplay" value="">
-            
-        </fieldset>
+
+	<!-- Hide an invisible image to use as the cockpit -->
+	<div style="display:none;">
+  		<img id="cockpitImg" src="resources/images/cockpit/cockpit2.png"
+       		width="900" height="900">
+	</div>
+	
+	<div> 
+	    <form id="input_form">
+	        <fieldset>
+	            <legend>Rendering Parameters</legend>
+	        	<input type="radio" name="primitive" id="wireframe" value="wireframe"> Wireframe
+	         	<input type="radio" name="primitive" id="polygon" id="polygon" value="polygon"> Polygon
+	        	<input type="radio" name="primitive" id="pointlight" value="pointlight" checked > Point Light  
+	            <input type="radio" name="primitive" id="wirepoly" value="wirepoly" checked > Polygon with Edges  
+	            
+	             <br><span id="rollSpan"></span>
+	            <input id = "roll" type="range" min="-0.5" max="0.5" step="0.05" oninput="updateCameraOrientation()" onchange="updateCameraOrientation()" value = 0>
+	            Roll Angle (rads): <input type="text" id="rollValueDisplay" value="">
+	            
+	            <br><span id="pitchSpan"></span>
+	            <input id = "pitch" type="range" min="-0.5" max="0.5" step="0.05" oninput="updateCameraOrientation()" onchange="updateCameraOrientation()" value = 0>
+	            Pitch Angle (rads): <input type="text" id="pitchValueDisplay" value="">
+	            
+	            <br><span id="yawSpan"></span>
+	            <input id = "yaw" type="range" min="-0.5" max="0.5" step="0.05" oninput="updateCameraOrientation()" onchange="updateCameraOrientation()" value = 0>
+	            Yaw Angle (rads): <input type="text" id="yawValueDisplay" value="">
+	            
+	             <br><span id="throttleSpan"></span>
+	            <input id = "throttle" type="range" min="0" max="1" step="0.01" oninput="updateThrottle(this.value)" onchange="updateThrottle(this.value)" value = 0>
+	            Normalized Throttle: <input type="text" id="throttleValueDisplay" value="">
+	            
+	        </fieldset>
         </form>
+	</div>
+	
+	
+	<!-- Two layers of canvas, the first layer for webgl, and the second for overlaying 2d cockpit images-->
+	<div> 
+ 		<canvas id="myGLCanvas" width="900" height="900" 
+ 				style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
+ 		<canvas id="overlaidCanvas" width = "900" height = "900" 
+ 				style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+	 </div>
+	 
+	 
+	 
+
 </body>
 
     
