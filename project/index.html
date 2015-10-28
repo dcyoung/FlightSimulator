@@ -3,6 +3,13 @@
 <head>
 <title> Flight Simulator </title>
 	<meta charset="utf-8"> 
+	<h2>Webgl Flight Simulator</h2>
+	<p><b>Controls:</b><br>
+		The plane will fly at a minimum speed without input. Use "q" and "e" to adjust throttle. Use "wasd" to control pitch and yaw.<br> 
+		Alternatively, click inside the canvas to use the mouse as a joystick. Mouse engagement will initiate in few seconds, as you may have popups.<br>
+		Both control schemes are joystick style with "s" or mouseDown lifting the nose of the craft, and a/d or mouseLeft/Right rolling the craft left or right.<br>
+		Reload the page for different terrains.  
+	</p>
 </head>
 
 <body onload="startup();">
@@ -13,6 +20,7 @@
        		width="900" height="900">
 	</div>
 	
+	<!-- 
 	<div> 
 	    <form id="input_form">
 	        <fieldset>
@@ -40,11 +48,12 @@
 	            
 	        </fieldset>
         </form>
+        -->
 	</div>
 	
 	
 	<!-- Two layers of canvas, the first layer for webgl, and the second for overlaying 2d cockpit images-->
-	<div> 
+	<div style="position: relative;"> 
  		<canvas id="myGLCanvas" width="900" height="900" 
  				style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
  		<canvas id="overlaidCanvas" width = "900" height = "900" 
@@ -134,8 +143,6 @@
     }
 </script>
 
-  
-    
 <!------------------------------------------------ Define Fragment Shaders ------------------------------------------------>         
     
 <script id="shader-fs" type="x-shader/x-fragment">

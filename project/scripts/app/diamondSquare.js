@@ -1,7 +1,7 @@
 /*
 * DiamondSquare.js (Terrain Generator)
 * This file generates a tile of terrain using the diamond square algorithm.  
-* To keep it's functionality compartamentalized, it is setup using a javascript prototype.
+* To keep it's functionality compartmentalized, it is setup using a js prototype.
 * This means any objects created using DiamondSquareTerrainGenerator() will 
 * inherit from this DiamondSquareTerrainGenerator.prototype... functionally this is like
 * creating a class.
@@ -20,27 +20,6 @@ function DiamondSquareTerrainGenerator(vertSideLength) {
     this.fluctionWeight = 0.4;
 };
 
-
-/**
-* generate the heightmap using the diamong square algorithm as follows...
-*   -initialize 4 corners to some height
-*   -until all array values are set
-*       -for each square in the array, midpoint height = avg four corner pts + random value
-*       -for each diamond in the array, midpoint height = avg four corner pts + random value
-*       -reduce magnitude of the random value
-*       -divide each square into 4 sub-squares and iterate
-*/
-DiamondSquareTerrainGenerator.prototype.generate = function() {
-    //initialize the 4 corners of the whole tile to a set height
-    var cornerHeight = 20;
-    this.setVertexHeight(0, 0, cornerHeight);
-    this.setVertexHeight(this.size-1, 0, cornerHeight);
-    this.setVertexHeight(this.size-1, this.size-1, cornerHeight);
-    this.setVertexHeight(0, this.size-1, cornerHeight);
-    
-    //kick off the diamond square algorithm
-    this.divideTile(this.max);
-};
 
 /**
 * Divides a tile into 4 sub-tiles and calls the square and diamond 
@@ -75,33 +54,6 @@ DiamondSquareTerrainGenerator.prototype.divideTile = function(localSize) {
 };
 
 /**
-* For a square in the array, midpoint height = avg four corner points + random value 
-*/
-DiamondSquareTerrainGenerator.prototype.squareStep = function(x, y, localSize, randomHeightOffset) {
-    var squareVertices = [];
-    var tempHeight;
-    //if the upper left corner exists
-    if( (tempHeight = this.getVertexHeight(x - localSize, y - localSize)) !=-1){ 
-        squareVertices.push(tempHeight);
-    }
-    //if the upper right corner exits
-    if( (tempHeight = this.getVertexHeight(x + localSize, y - localSize)) !=-1){
-        squareVertices.push(tempHeight);
-    }
-    //if the lower right corner exits
-    if( (tempHeight = this.getVertexHeight(x + localSize, y + localSize)) !=-1){
-        squareVertices.push(tempHeight);
-    }
-    //if the lower left corner exits
-    if( (tempHeight = this.getVertexHeight(x - localSize, y + localSize)) !=-1){
-        squareVertices.push(tempHeight);
-    } 
-    
-    var midPointHeight = this.getAverageOfArray(squareVertices);
-    this.setVertexHeight(x, y, midPointHeight + randomHeightOffset);
-};
-
-/**
 * For a diamond in the array, midpoint height = avg four corner points + random value
 */
 DiamondSquareTerrainGenerator.prototype.diamondStep = function(x, y, localSize, randomHeightOffset) {
@@ -129,6 +81,35 @@ DiamondSquareTerrainGenerator.prototype.diamondStep = function(x, y, localSize, 
 };
 
 /**
+* For a square in the array, midpoint height = avg four corner points + random value 
+*/
+DiamondSquareTerrainGenerator.prototype.squareStep = function(x, y, localSize, randomHeightOffset) {
+    var squareVertices = [];
+    var tempHeight;
+    //if the upper left corner exists
+    if( (tempHeight = this.getVertexHeight(x - localSize, y - localSize)) !=-1){ 
+        squareVertices.push(tempHeight);
+    }
+    //if the upper right corner exits
+    if( (tempHeight = this.getVertexHeight(x + localSize, y - localSize)) !=-1){
+        squareVertices.push(tempHeight);
+    }
+    //if the lower right corner exits
+    if( (tempHeight = this.getVertexHeight(x + localSize, y + localSize)) !=-1){
+        squareVertices.push(tempHeight);
+    }
+    //if the lower left corner exits
+    if( (tempHeight = this.getVertexHeight(x - localSize, y + localSize)) !=-1){
+        squareVertices.push(tempHeight);
+    } 
+    
+    var midPointHeight = this.getAverageOfArray(squareVertices);
+    this.setVertexHeight(x, y, midPointHeight + randomHeightOffset);
+};
+
+
+
+/**
 * Returns the average of an array of numbers
 */
 DiamondSquareTerrainGenerator.prototype.getAverageOfArray = function(arrayOfValues) {
@@ -145,6 +126,30 @@ DiamondSquareTerrainGenerator.prototype.getAverageOfArray = function(arrayOfValu
     var avg = total/arrayOfValues.length;
     return avg;
 };
+
+
+
+/**
+* generate the heightmap using the diamong square algorithm as follows...
+*   -initialize 4 corners to some height
+*   -until all array values are set
+*       -for each square in the array, midpoint height = avg four corner pts + random value
+*       -for each diamond in the array, midpoint height = avg four corner pts + random value
+*       -reduce magnitude of the random value
+*       -divide each square into 4 sub-squares and iterate
+*/
+DiamondSquareTerrainGenerator.prototype.generate = function() {
+    //initialize the 4 corners of the whole tile to a set height
+    var cornerHeight = 20;
+    this.setVertexHeight(0, 0, cornerHeight);
+    this.setVertexHeight(this.size-1, 0, cornerHeight);
+    this.setVertexHeight(this.size-1, this.size-1, cornerHeight);
+    this.setVertexHeight(0, this.size-1, cornerHeight);
+    
+    //kick off the diamond square algorithm
+    this.divideTile(this.max);
+};
+
 
 /**
 * Get the height at a specific vertex (x,y) from the heightmap

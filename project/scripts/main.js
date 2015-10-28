@@ -1,8 +1,3 @@
-
-
-
-
-
 var gl;
 var canvas = document.getElementById("myGLCanvas");
 
@@ -29,7 +24,7 @@ var tIndexEdgeBuffer;
 
 // View parameters
 var quatComposite = quat.create();
-var eyePt = vec3.fromValues(5.0, 1.0, 5.0);
+var eyePt = vec3.fromValues(-2, 0, 2);//5.0, 1.0, 1.0);
 var viewDir = vec3.fromValues(0.0,0.0,-1.0);
 var viewDirStart = vec3.fromValues(0.0,0.0,-1.0);
 var up = vec3.fromValues(0.0,1.0,0.0);
@@ -47,17 +42,20 @@ var pMatrix = mat4.create();
 
 var mvMatrixStack = [];
 
-var throttle = 0;
-var minSpeed = 0.001;
-var maxSpeed = 0.01;
-var displacementVector =  vec3.create();
 
 
 
 //---------------------------- Terrain Parameter Stuff ---------------------------------------------
 //this will grow exponentially so be careful
-var terrainComplexity = 7;//7;
-var terrainScale = 5;//5;
+var terrainComplexity = 7;
+var terrainScale = 5;
+
+
+//---------------------------- Throttle Parameter Stuff ---------------------------------------------
+var throttle = 0;
+var minSpeed = 0.001;
+var maxSpeed = 0.01;
+var displacementVector =  vec3.create();
 
 
 //---------------------------- MOUSE CONTROL STUFF ---------------------------------------------
@@ -336,13 +334,6 @@ function setupBuffers() {
     setupTerrainBuffers();
 }
 
-//----------------------------------------------------------------------------------
-
-function updateThrottle(throttleInput){
-	throttle = throttleInput;
-	document.getElementById('throttleValueDisplay').value = throttle;
-}
-
 
 //----------------------------------------------------------------------------------
 function draw() { 
@@ -363,26 +354,28 @@ function draw() {
     mvPushMatrix();
     vec3.set(transformVec,0.0,-0.25,-3.0);
     mat4.translate(mvMatrix, mvMatrix,transformVec);
-    mat4.rotateX(mvMatrix, mvMatrix, degToRad(-55));
-    mat4.rotateZ(mvMatrix, mvMatrix, degToRad(-160));     
+    var temp1 = -75;
+    var temp2 = 25;
+    mat4.rotateX(mvMatrix, mvMatrix, degToRad(temp1));
+    mat4.rotateZ(mvMatrix, mvMatrix, degToRad(temp2));     
     setMatrixUniforms();
     
-    if (document.getElementById("polygon").checked){
+    if(false){//document.getElementById("polygon").checked){
         uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[1.0,0.5,0.0],[0.0,0.0,0.0]);
         drawTerrain();
     }
-    if(document.getElementById("wirepoly").checked){
+    if(true){//document.getElementById("wirepoly").checked){
         //uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[1.0,0.5,0.0],[0.0,0.0,0.0]);
     	uploadLightsToShader([0,1,1],[0.1,0.1,0.1],[1.0,0.5,0.0],[0.0,0.0,0.0]);
         drawTerrain();
         uploadLightsToShader([0,1,1],[0.0,0.0,0.0],[0.0,0.0,0.0],[0.0,0.0,0.0]);
         drawTerrainEdges();
     }
-    if(document.getElementById("wireframe").checked){
+    if(false){//document.getElementById("wireframe").checked){
         uploadLightsToShader([0,1,1],[1.0,1.0,1.0],[0.0,0.0,0.0],[0.0,0.0,0.0]);
         drawTerrainEdges();
     }
-    if(document.getElementById("pointlight").checked){
+    if(false){//document.getElementById("pointlight").checked){
         /*Cool retro 80s tron like shader
         var lightPosition = vec3.fromValues (0.0, 10.0, 0.0);
         var lightAmbient = vec3.fromValues (1.0, 0.0, 0.0 );
@@ -404,6 +397,10 @@ function draw() {
     }
     
     mvPopMatrix();
+    
+    //overlay the cockpit image
+    context2d.drawImage(cockpitImg, 0, 0);
+    
 }
 
 //----------------------------------------------------------------------------------
@@ -414,16 +411,9 @@ function animate() {
 
 
 
-//----------------------------------------------------------------------------------
-function moveCameraPoint(newPt){
-    eyePt = vec3.add(eyePt,eyePt, newPt);
-}
 
 //----------------------------------------------------------------------------------
-var throttleSensitivity = 0.005;
-//use the mouse for pitch and yaw, and change the throttle with w and s
-
-var map = []; // Or you could call it "key"
+var map = [];  //map of all gets currently pressed down.
 onkeydown = onkeyup = function(e){
     e = e || event; // to deal with IE
     map[e.keyCode] = e.type == 'keydown';
@@ -448,6 +438,8 @@ onkeydown = onkeyup = function(e){
     }
 }
 
+//----------------------------------------------------------------------------------
+var throttleSensitivity = 0.005;
 function addThrottleControls(){
     document.body.addEventListener('keypress', function (e) {
         var key = e.which || e.keyCode;
@@ -464,8 +456,13 @@ function addThrottleControls(){
         }
         
     });
-	
 }
+
+//----------------------------------------------------------------------------------
+//function updateThrottle(throttleInput){
+//	throttle = throttleInput;
+//	document.getElementById('throttleValueDisplay').value = throttle;
+//}
 
 //Simply moves the plane forward along its view direction vector by a distance proportional to its speed
 function updatePlane(){
@@ -510,6 +507,7 @@ function updateCameraOrientation(){
 function updateRotationFromMouseIfNecessary(){
 	var rollInput = -mouseMovementX*rollMovementSensitivity;
 	var pitchInput = mouseMovementY*pitchMovementSensitivity;
+	//if necessary, add to the composite quaternion
 	if(rollInput > 0){
 		quat.multiply(quatComposite, quatComposite, quat.fromValues(0, 0, rollInput, 1)); 
 	}
@@ -557,9 +555,8 @@ function tick() {
 	updateCameraOrientation();
 	updatePlane();
     requestAnimFrame(tick);
+
     draw();
-    
-    context2d.drawImage(cockpitImg, 0, 0);
     
     animate();
 }
