@@ -8,7 +8,7 @@
 		The plane will fly at a minimum speed without input. Use "q" and "e" to adjust throttle. Use "wasd" to control pitch and yaw.<br> 
 		Alternatively, click inside the canvas to use the mouse as a joystick. Mouse engagement will initiate in few seconds, as you may have popups.<br>
 		Both control schemes are joystick style with "s" or mouseDown lifting the nose of the craft, and a/d or mouseLeft/Right rolling the craft left or right.<br>
-		Reload the page for different terrains.  
+		Reload the page for different terrains. Additionally, you can make tiny adjustments with the buttons below.
 	</p>
 </head>
 
@@ -19,7 +19,13 @@
   		<img id="cockpitImg" src="resources/images/cockpit/cockpit2.png"
        		width="900" height="900">
 	</div>
+	 	<button type="button" onclick="handleUserInterfaceInput('rollLeft')">Roll Left</button>
+	 	<button type="button" onclick="handleUserInterfaceInput('rollRight')">Roll Right</button>
+	 	<button type="button" onclick="handleUserInterfaceInput('liftUp')">Lift Up</button>
+	 	<button type="button" onclick="handleUserInterfaceInput('diveDown')">Dive Down</button>
+	</div> 
 	
+	<br><br>
 	<!-- 
 	<div> 
 	    <form id="input_form">
@@ -51,7 +57,7 @@
         -->
 	</div>
 	
-	
+		
 	<!-- Two layers of canvas, the first layer for webgl, and the second for overlaying 2d cockpit images-->
 	<div style="position: relative;"> 
  		<canvas id="myGLCanvas" width="900" height="900" 
@@ -59,8 +65,9 @@
  		<canvas id="overlaidCanvas" width = "900" height = "900" 
  				style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
 	 </div>
-	 
-	 
+	
+
+
 	 
 
 </body>

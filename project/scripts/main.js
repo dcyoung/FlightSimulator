@@ -438,6 +438,27 @@ onkeydown = onkeyup = function(e){
     }
 }
 
+function handleUserInterfaceInput(command){
+	switch(command){
+		case "rollLeft":
+			quat.multiply(quatComposite, quatComposite, quat.fromValues(0, 0, rollMovementSensitivity, 1)); 
+			break;
+		case "rollRight":
+			quat.multiply(quatComposite, quatComposite, quat.fromValues(0, 0, -rollMovementSensitivity, 1));
+			break;
+		case "liftUp":
+			quat.multiply(quatComposite, quatComposite, quat.fromValues(pitchMovementSensitivity, 0, 0, 1));
+			break;
+		case "diveDown":
+			quat.multiply(quatComposite, quatComposite, quat.fromValues(-pitchMovementSensitivity, 0, 0, 1));
+			break;
+		default:
+			break;
+	}
+}
+
+
+
 //----------------------------------------------------------------------------------
 var throttleSensitivity = 0.005;
 function addThrottleControls(){
